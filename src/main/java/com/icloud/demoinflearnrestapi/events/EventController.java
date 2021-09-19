@@ -1,6 +1,7 @@
 package com.icloud.demoinflearnrestapi.events;
 
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,16 +19,15 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 public class EventController {
 
     private final EventRepository eventRepository;
+    private final ModelMapper mapper;
 
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
-        Event newEvent = this.eventRepository.save(event);
-
-        URI createdUri = linkTo(getClass()).slash(newEvent.getId())
+    public ResponseEntity<Event> createEvent(@RequestBody EventDto eventDto) {
+        Event newEvent = eventRepository.save(mapper.map(eventDto, Event.class));
+        URI createdUri = linkTo(this.getClass()).slash(newEvent.getId())
                 .toUri();
 
-        return ResponseEntity
-                .created(createdUri)
+        return ResponseEntity.created(createdUri)
                 .body(newEvent);
     }
 }
