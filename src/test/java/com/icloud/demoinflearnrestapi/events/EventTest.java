@@ -2,8 +2,7 @@ package com.icloud.demoinflearnrestapi.events;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class EventTest {
 
@@ -31,5 +30,71 @@ class EventTest {
         // THEN
         assertEquals(event.getName(), name);
         assertEquals(event.getDescription(), description);
+    }
+
+    @Test
+    void testFree() throws Exception {
+        // GIVEN
+        Event event = Event.builder()
+                .basePrice(0)
+                .maxPrice(0)
+                .build();
+
+        // WHEN
+        event.update();
+
+        // THEN
+        assertTrue(event.isFree());
+
+
+        // GIVEN
+        event = Event.builder()
+                .basePrice(100)
+                .maxPrice(0)
+                .build();
+
+        // WHEN
+        event.update();
+
+        // THEN
+        assertFalse(event.isFree());
+
+
+        // GIVEN
+        event = Event.builder()
+                .basePrice(0)
+                .maxPrice(100)
+                .build();
+
+        // WHEN
+        event.update();
+
+        // THEN
+        assertFalse(event.isFree());
+    }
+
+    @Test
+    void testOffline() throws Exception {
+        // GIVEN
+        Event event = Event.builder()
+                .location("강남역 네이버 D2 스타텁 팩토리")
+                .build();
+
+        // WHEN
+        event.update();
+
+        // THEN
+        assertTrue(event.isOffline());
+
+
+        // GIVEN
+        event = Event.builder()
+                .build();
+
+        // WHEN
+        event.update();
+
+        // THEN
+        assertFalse(event.isOffline());
     }
 }

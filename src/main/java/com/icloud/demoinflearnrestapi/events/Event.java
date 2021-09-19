@@ -1,6 +1,7 @@
 package com.icloud.demoinflearnrestapi.events;
 
 import lombok.*;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -29,4 +30,9 @@ public class Event {
     private EventStatus eventStatus = EventStatus.DRAFT;
 
 
+    public void update() {
+        // UPDATE FREE
+        this.free = this.basePrice == 0 && this.maxPrice == 0;
+        this.offline = StringUtils.hasText(this.location);
+    }
 }

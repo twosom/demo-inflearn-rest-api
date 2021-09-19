@@ -68,10 +68,10 @@ public class EventControllerTests {
                         header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE)
                 )
                 .andExpect(
-                        jsonPath("id").value(not(100))
+                        jsonPath("free").value(false)
                 )
                 .andExpect(
-                        jsonPath("free").value(not(true))
+                        jsonPath("offline").value(true)
                 )
                 .andExpect(
                         jsonPath("eventStatus").value(EventStatus.DRAFT.name())
