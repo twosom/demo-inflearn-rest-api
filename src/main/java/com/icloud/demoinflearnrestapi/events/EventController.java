@@ -2,10 +2,12 @@ package com.icloud.demoinflearnrestapi.events;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.internal.Errors;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,12 @@ public class EventController {
 
     private final EventRepository eventRepository;
     private final ModelMapper mapper;
+    private final EventValidator eventValidator;
+
+    @InitBinder("eventDto")
+    public void initBinder(WebDataBinder binder) {
+        binder.addValidators(eventValidator);
+    }
 
     @PostMapping
     public ResponseEntity<Event> createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
