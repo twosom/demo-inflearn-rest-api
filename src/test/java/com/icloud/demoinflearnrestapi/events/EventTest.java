@@ -1,8 +1,12 @@
 package com.icloud.demoinflearnrestapi.events;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class EventTest {
 
@@ -32,69 +36,54 @@ class EventTest {
         assertEquals(event.getDescription(), description);
     }
 
-    @Test
-    void testFree() throws Exception {
+    @DisplayName("event 의 free 값이 잘 설정 되는지 테스트")
+    @ParameterizedTest(name = "basePrice : {0}, maxPrice : {1}, isFree : {2}")
+    @MethodSource(value = "parametersForTestFree")
+    void testFree(int basePrice, int maxPrice, boolean isFree) throws Exception {
         // GIVEN
         Event event = Event.builder()
-                .basePrice(0)
-                .maxPrice(0)
+                .basePrice(basePrice)
+                .maxPrice(maxPrice)
                 .build();
 
         // WHEN
         event.update();
 
         // THEN
-        assertTrue(event.isFree());
-
-
-        // GIVEN
-        event = Event.builder()
-                .basePrice(100)
-                .maxPrice(0)
-                .build();
-
-        // WHEN
-        event.update();
-
-        // THEN
-        assertFalse(event.isFree());
-
-
-        // GIVEN
-        event = Event.builder()
-                .basePrice(0)
-                .maxPrice(100)
-                .build();
-
-        // WHEN
-        event.update();
-
-        // THEN
-        assertFalse(event.isFree());
+        assertEquals(event.isFree(), isFree);
     }
 
-    @Test
-    void testOffline() throws Exception {
+    static Object[] parametersForTestFree() {
+        return new Object[]{
+                new Object[]{0, 0, true},
+                new Object[]{100, 0, false},
+                new Object[]{0, 100, false},
+                new Object[]{100, 200, false}
+        };
+    }
+
+
+    @DisplayName("Event 의 offline 값이 잘 설정 되는지 테스트")
+    @ParameterizedTest(name = "location : {0}, isOffline : {1}")
+    @MethodSource(value = "parametersForTestOffline")
+    void testOffline(String location, boolean isOffline) throws Exception {
         // GIVEN
         Event event = Event.builder()
-                .location("강남역 네이버 D2 스타텁 팩토리")
+                .location(location)
                 .build();
 
         // WHEN
         event.update();
 
         // THEN
-        assertTrue(event.isOffline());
+        assertEquals(event.isOffline(), isOffline);
+    }
 
-
-        // GIVEN
-        event = Event.builder()
-                .build();
-
-        // WHEN
-        event.update();
-
-        // THEN
-        assertFalse(event.isOffline());
+    static Object[] parametersForTestOffline() {
+        return new Object[]{
+                new Object[]{"강남역 네이버 D2스타텁 팩토리", true},
+                new Object[]{null, false},
+                new Object[]{"              ", false}
+        };
     }
 }
