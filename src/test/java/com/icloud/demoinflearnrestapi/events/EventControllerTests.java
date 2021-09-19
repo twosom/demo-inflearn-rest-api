@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -52,30 +51,18 @@ public class EventControllerTests {
                                 .accept(MediaTypes.HAL_JSON)
                                 .content(objectMapper.writeValueAsString(event))
                 )
-                .andExpect(
-                        status().isCreated()
-                )
-                .andDo(
-                        print()
-                )
-                .andExpect(
-                        jsonPath("id").exists()
-                )
-                .andExpect(
-                        header().exists(HttpHeaders.LOCATION)
-                )
-                .andExpect(
-                        header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE)
-                )
-                .andExpect(
-                        jsonPath("free").value(false)
-                )
-                .andExpect(
-                        jsonPath("offline").value(true)
-                )
-                .andExpect(
-                        jsonPath("eventStatus").value(EventStatus.DRAFT.name())
-                )
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+                .andExpect(jsonPath("free").value(false))
+                .andExpect(jsonPath("offline").value(true))
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.query-events").exists())
+                .andExpect(jsonPath("_links.update-event").exists())
+//                .andExpect(jsonPath("_link.profile").exists())
         ;
 
     }
@@ -106,16 +93,12 @@ public class EventControllerTests {
                                 .accept(MediaTypes.HAL_JSON)
                                 .content(objectMapper.writeValueAsString(event))
                 )
-                .andDo(
-                        print()
-                )
-                .andExpect(
-                        status().isBadRequest()
-                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
         ;
 
     }
-    
+
 
     @Test
     @DisplayName("입력 값이 비어있는 경우에 에러가 발생하는 테스트")
@@ -127,13 +110,8 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventDto))
                 )
-                .andDo(
-                        print()
-                )
-                .andExpect(
-                        status().isBadRequest()
-                )
-        ;
+                .andDo(print())
+                .andExpect(status().isBadRequest());
 
     }
 
@@ -157,22 +135,11 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventDto))
                 )
-                .andDo(
-                        print()
-                )
-                .andExpect(
-                        status().isBadRequest()
-                )
-                .andExpect(
-                        jsonPath("$[0].objectName").exists()
-                )
-                .andExpect(
-                        jsonPath("$[0].defaultMessage").exists()
-                )
-                .andExpect(
-                        jsonPath("$[0].code").exists()
-                )
-        ;
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].objectName").exists())
+                .andExpect(jsonPath("$[0].defaultMessage").exists())
+                .andExpect(jsonPath("$[0].code").exists());
 
     }
 

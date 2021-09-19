@@ -3,6 +3,7 @@ package com.icloud.demoinflearnrestapi.events;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
@@ -16,7 +17,6 @@ import javax.validation.Valid;
 import java.net.URI;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Controller
 @RequestMapping(value = "/api/events", produces = MediaTypes.HAL_JSON_VALUE)
@@ -32,6 +32,7 @@ public class EventController {
         binder.addValidators(eventValidator);
     }
 
+
     @PostMapping
     public ResponseEntity<Object> createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
         if (errors.hasErrors()) {
@@ -41,10 +42,15 @@ public class EventController {
         Event event = mapper.map(eventDto, Event.class);
         event.update();
         Event newEvent = eventRepository.save(event);
-        URI createdUri = linkTo(this.getClass()).slash(newEvent.getId())
-                .toUri();
+        WebMvcLinkBuilder selfLinkBuilder = linkTo(getClass()).slash(newEvent.getId());
+        URI createdUri = selfLinkBuilder.toUri();
+        EventEntityModel eventEntityModel = new EventEntityModel(event,
+                linkTo(getClass()).withRel("query-events"),
+                selfLinkBuilder.withRel("update-event")
+        );
+
 
         return ResponseEntity.created(createdUri)
-                .body(newEvent);
+                .body(eventEntityModel);
     }
 }
