@@ -8,11 +8,16 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Builder @AllArgsConstructor @NoArgsConstructor
-@Getter @Setter @EqualsAndHashCode(of = "id")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
 public class Event {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private Integer id;
     private String name;
     private String description;
@@ -26,14 +31,16 @@ public class Event {
     private int limitOfEnrollment;
     private boolean offline;
     private boolean free;
-    @Builder.Default
+
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private EventStatus eventStatus = EventStatus.DRAFT;
 
-
     public void update() {
-        // UPDATE FREE
+        // Update Free
         this.free = this.basePrice == 0 && this.maxPrice == 0;
-        this.offline = StringUtils.hasText(this.location);
+        if (StringUtils.hasText(this.location)) {
+            this.offline = true;
+        }
     }
 }

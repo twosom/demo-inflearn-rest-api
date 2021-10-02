@@ -10,44 +10,50 @@ import java.io.IOException;
 
 @JsonComponent
 public class ErrorsSerializer extends JsonSerializer<Errors> {
-
     @Override
-    public void serialize(Errors errors, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeStartArray();
+    public void serialize(Errors errors, JsonGenerator jsonGenerator, SerializerProvider serializers) throws IOException {
+        //TODO 스프링 부트 2.3 으로 올라가면서 Jackson 라이브러리가 더이상 Array 부터 만드는 것을 허용하지 않음.
+        // 그래서 errors 라는 필드로 감싼 것.
+        jsonGenerator.writeFieldName("errors");
+        jsonGenerator.writeStartArray();
         {
-            errors.getFieldErrors().forEach(e -> {
-                try {
-                    gen.writeStartObject();
-                    {
-                        gen.writeStringField("field", e.getField());
-                        gen.writeStringField("objectName", e.getObjectName());
-                        gen.writeStringField("code", e.getCode());
-                        gen.writeStringField("defaultMessage", e.getDefaultMessage());
-                        Object rejectedValue = e.getRejectedValue();
-                        if (rejectedValue != null) {
-                            gen.writeStringField("rejectedValue", rejectedValue.toString());
+            errors.getFieldErrors()
+                    .forEach(e -> {
+                        try {
+                            jsonGenerator.writeStartObject();
+                            {
+                                jsonGenerator.writeStringField("field", e.getField());
+                                jsonGenerator.writeStringField("objectName", e.getObjectName());
+                                jsonGenerator.writeStringField("code", e.getCode());
+                                jsonGenerator.writeStringField("defaultMessage", e.getDefaultMessage());
+                                Object rejectedValue = e.getRejectedValue();
+                                if (rejectedValue != null) {
+                                    jsonGenerator.writeStringField("rejectedValue", rejectedValue.toString());
+                                }
+                            }
+                            jsonGenerator.writeEndObject();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
                         }
-                    }
-                    gen.writeEndObject();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            });
+                    });
+            ;
 
-            errors.getGlobalErrors().forEach(e -> {
-                try {
-                    gen.writeStartObject();
-                    {
-                        gen.writeStringField("objectName", e.getObjectName());
-                        gen.writeStringField("code", e.getCode());
-                        gen.writeStringField("defaultMessage", e.getDefaultMessage());
-                    }
-                    gen.writeEndObject();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            });
+            errors.getGlobalErrors()
+                    .forEach(e -> {
+                        try {
+                            jsonGenerator.writeStartObject();
+                            {
+                                jsonGenerator.writeStringField("objectName", e.getObjectName());
+                                jsonGenerator.writeStringField("code", e.getCode());
+                                jsonGenerator.writeStringField("defaultMessage", e.getDefaultMessage());
+
+                            }
+                            jsonGenerator.writeEndObject();
+                        } catch (IOException exception) {
+                            exception.printStackTrace();
+                        }
+                    });
         }
-        gen.writeEndArray();
+        jsonGenerator.writeEndArray();
     }
 }

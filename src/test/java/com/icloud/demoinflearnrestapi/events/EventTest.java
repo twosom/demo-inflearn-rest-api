@@ -1,12 +1,12 @@
 package com.icloud.demoinflearnrestapi.events;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.boot.jackson.JsonComponent;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class EventTest {
 
@@ -36,7 +36,6 @@ class EventTest {
         assertEquals(event.getDescription(), description);
     }
 
-    @DisplayName("event 의 free 값이 잘 설정 되는지 테스트")
     @ParameterizedTest(name = "basePrice : {0}, maxPrice : {1}, isFree : {2}")
     @MethodSource(value = "parametersForTestFree")
     void testFree(int basePrice, int maxPrice, boolean isFree) throws Exception {
@@ -53,7 +52,7 @@ class EventTest {
         assertEquals(event.isFree(), isFree);
     }
 
-    static Object[] parametersForTestFree() {
+    private static Object[] parametersForTestFree() {
         return new Object[]{
                 new Object[]{0, 0, true},
                 new Object[]{100, 0, false},
@@ -62,28 +61,23 @@ class EventTest {
         };
     }
 
-
-    @DisplayName("Event 의 offline 값이 잘 설정 되는지 테스트")
     @ParameterizedTest(name = "location : {0}, isOffline : {1}")
     @MethodSource(value = "parametersForTestOffline")
     void testOffline(String location, boolean isOffline) throws Exception {
-        // GIVEN
         Event event = Event.builder()
                 .location(location)
                 .build();
-
-        // WHEN
         event.update();
 
-        // THEN
+
         assertEquals(event.isOffline(), isOffline);
     }
 
-    static Object[] parametersForTestOffline() {
+    private static Object[] parametersForTestOffline() {
         return new Object[]{
-                new Object[]{"강남역 네이버 D2스타텁 팩토리", true},
+                new Object[]{"강남", true},
                 new Object[]{null, false},
-                new Object[]{"              ", false}
+                new Object[]{"             ", false}
         };
     }
 }

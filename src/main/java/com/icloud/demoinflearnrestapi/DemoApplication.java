@@ -13,7 +13,6 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-
     @Bean
     public ModelMapper mapper() {
         ModelMapper mapper = new ModelMapper();
