@@ -1,5 +1,6 @@
 package com.icloud.demoinflearnrestapi.events;
 
+import com.icloud.demoinflearnrestapi.accounts.Account;
 import lombok.*;
 import org.springframework.util.StringUtils;
 
@@ -35,6 +36,10 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private EventStatus eventStatus = EventStatus.DRAFT;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Account manager;
+
 
     public void update() {
         // Update Free

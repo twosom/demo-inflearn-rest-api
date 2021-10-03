@@ -19,3 +19,4 @@ logging.level:
   org.hibernate.SQL: debug
   ## 쿼리가 보여줄 때 실제 입력되는 값을 보고 싶은 경우
   org.hibernate.type.descriptor.sql.BasicBinder: trace
+  org.springframework.security: debug
