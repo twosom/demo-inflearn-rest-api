@@ -1,5 +1,6 @@
 package com.icloud.demoinflearnrestapi.accounts;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,13 +30,18 @@ class AccountServiceTest {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @BeforeEach
+    void beforeEach() {
+        this.accountRepository.deleteAll();
+    }
+
 
     @DisplayName("사용자 이름으로 계정 가져오기")
     @Test
     void findByUsername() throws Exception {
         // GIVEN
-        String password = "twosom";
         String username = "two_somang@icloud.com";
+        String password = "twosom";
         Account account = Account.builder()
                 .email(username)
                 .password(password)

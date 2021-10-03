@@ -1,9 +1,9 @@
 package com.icloud.demoinflearnrestapi.configs;
 
+import com.icloud.demoinflearnrestapi.common.AppProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.web.servlet.oauth2.resourceserver.OAuth2ResourceServerSecurityMarker;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
@@ -16,13 +16,13 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 @Configuration
 @EnableAuthorizationServer
 @RequiredArgsConstructor
-@OAuth2ResourceServerSecurityMarker
 public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
 
     public static final int TEN_MINUTES = 10 * 60;
     public static final int ONE_HOUR = 6 * 10 * 60;
 
 
+    private final AppProperties appProperties;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
     private final AuthenticationManager authenticationManager;
@@ -36,10 +36,10 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.inMemory()
-                .withClient("myApp")
+                .withClient(appProperties.getClientId())
+                .secret(this.passwordEncoder.encode(appProperties.getClientSecret()))
                 .authorizedGrantTypes("password", "refresh_token")
                 .scopes("read", "write")
-                .secret(this.passwordEncoder.encode("pass"))
                 .accessTokenValiditySeconds(TEN_MINUTES)
                 .refreshTokenValiditySeconds(ONE_HOUR)
         ;

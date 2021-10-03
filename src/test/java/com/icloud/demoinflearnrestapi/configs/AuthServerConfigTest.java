@@ -1,8 +1,11 @@
 package com.icloud.demoinflearnrestapi.configs;
 
 import com.icloud.demoinflearnrestapi.accounts.Account;
+import com.icloud.demoinflearnrestapi.accounts.AccountRepository;
 import com.icloud.demoinflearnrestapi.accounts.AccountService;
+import com.icloud.demoinflearnrestapi.common.AppProperties;
 import com.icloud.demoinflearnrestapi.common.BaseControllerTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,30 +32,32 @@ class AuthServerConfigTest extends BaseControllerTest {
     @Autowired
     AccountService accountService;
 
+    @Autowired
+    AccountRepository accountRepository;
+
+    @Autowired
+    AppProperties appProperties;
+
+    @BeforeEach
+    void beforeEach() {
+        this.accountRepository.deleteAll();
+    }
+
 
     @DisplayName("인증 토큰 발급")
     @Test
     void authToken() throws Exception {
         // GIVEN
-        String username = "twosom@icloud.com";
-        String password = "twosom";
 
-        Account account = Account.builder()
-                .email(username)
-                .password(password)
-                .roles(Set.of(ADMIN, USER))
-                .build();
+        Account account = appProperties.createAdminAccount();
 
         this.accountService.saveAccount(account);
 
-        String clientId = "myApp";
-        String clientSecret = "pass";
-
         //TODO 기본적으로 인증 서버가 등록이 되면 /oauth/token 이라는 요청을 처리할 수 있는 핸들러가 적용됨.
         this.mockMvc.perform(post("/oauth/token")
-                        .with(httpBasic(clientId, clientSecret))
-                        .param("username", username)
-                        .param("password", password)
+                        .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                        .param("username", appProperties.getAdminUsername())
+                        .param("password", appProperties.getAdminPassword())
                         .param("grant_type", "password")
                 )
                 .andDo(print())

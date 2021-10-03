@@ -1,7 +1,12 @@
 package com.icloud.demoinflearnrestapi.events;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.icloud.demoinflearnrestapi.accounts.Account;
+import com.icloud.demoinflearnrestapi.accounts.AccountRepository;
+import com.icloud.demoinflearnrestapi.accounts.AccountService;
+import com.icloud.demoinflearnrestapi.common.AppProperties;
 import com.icloud.demoinflearnrestapi.common.BaseControllerTest;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
@@ -12,6 +17,7 @@ import org.springframework.http.MediaType;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
@@ -21,6 +27,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -30,6 +37,24 @@ public class EventControllerTests extends BaseControllerTest {
 
     @Autowired
     ModelMapper modelMapper;
+
+    @Autowired
+    AccountService accountService;
+
+    @Autowired
+    AccountRepository accountRepository;
+
+    @Autowired
+    EventRepository eventRepository;
+
+    @Autowired
+    AppProperties appProperties;
+
+    @BeforeEach
+    void beforeEach() {
+        this.eventRepository.deleteAll();
+        this.accountRepository.deleteAll();
+    }
 
 
     @DisplayName("정상적으로 이벤트를 생성하는 테스트")
@@ -53,6 +78,7 @@ public class EventControllerTests extends BaseControllerTest {
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .accept(MediaTypes.HAL_JSON)
                         .content(objectMapper.writeValueAsString(event))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isCreated())
@@ -74,7 +100,8 @@ public class EventControllerTests extends BaseControllerTest {
                         //TODO 요청 헤더 문서화
                         requestHeaders(
                                 headerWithName(HttpHeaders.ACCEPT).description("요청 헤더의 ACCEPT 필드입니다."),
-                                headerWithName(HttpHeaders.CONTENT_TYPE).description("요청 헤더의 CONTENT_TYPE 필드입니다.")
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("요청 헤더의 CONTENT_TYPE 필드입니다."),
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("인증을 위에 인증정보를 전송하는 헤더입니다.")
                         ),
                         //TODO 요청 필드 문서화
                         requestFields(
@@ -110,12 +137,38 @@ public class EventControllerTests extends BaseControllerTest {
                                 fieldWithPath("offline").description("이벤트의 온/오프라인 여부입니다."),
                                 fieldWithPath("free").description("이벤트의 유/무료 여부입니다."),
                                 fieldWithPath("eventStatus").description("이벤트의 상태값입니다."),
+                                fieldWithPath("manager").description("해당 이벤트의 생성자입니다."),
                                 //TODO _links 밑에 있는 데이터들은 무시
                                 fieldWithPath("_links.*.*").ignored()
                         )
 
                 ))
         ;
+    }
+
+    private String getBearerToken() throws Exception {
+        return "Bearer " + getAccessToken();
+    }
+
+    private String getAccessToken() throws Exception {
+        // GIVEN
+        Account account = appProperties.createAdminAccount();
+        accountService.saveAccount(account);
+        String contentAsString = this.mockMvc.perform(post("/oauth/token")
+                        .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                        .param("username", appProperties.getAdminUsername())
+                        .param("password", appProperties.getAdminPassword())
+                        .param("grant_type", "password")
+                )
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readValue(contentAsString, new TypeReference<Map<String, Object>>() {
+                })
+                .get("access_token")
+                .toString()
+                ;
     }
 
 
@@ -143,6 +196,7 @@ public class EventControllerTests extends BaseControllerTest {
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .accept(MediaTypes.HAL_JSON)
                         .content(objectMapper.writeValueAsString(event))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -157,6 +211,7 @@ public class EventControllerTests extends BaseControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(objectMapper.writeValueAsString(eventDto))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andExpect(status().isBadRequest());
     }
@@ -182,6 +237,7 @@ public class EventControllerTests extends BaseControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding(StandardCharsets.UTF_8.name())
                         .content(objectMapper.writeValueAsString(eventDto))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -249,6 +305,7 @@ public class EventControllerTests extends BaseControllerTest {
                                 fieldWithPath("_embedded.eventList[].free").description("이벤트의 유/무료 여부입니다."),
                                 fieldWithPath("_embedded.eventList[].eventStatus").description("이벤트의 상태값입니다."),
                                 fieldWithPath("_embedded.eventList[]._links.self.href").description("해당 이벤트로 가는 링크입니다."),
+                                fieldWithPath("_embedded.eventList[].manager").description("해당 이벤트의 생성자입니다."),
                                 fieldWithPath("_links.*.*").ignored(),
                                 fieldWithPath("page.size").description("현재 조회된 이벤트 목록의 개수입니다."),
                                 fieldWithPath("page.totalElements").description("총 이벤트의 개수입니다."),
@@ -297,6 +354,7 @@ public class EventControllerTests extends BaseControllerTest {
                                 fieldWithPath("offline").description("이벤트의 온/오프라인 여부입니다."),
                                 fieldWithPath("free").description("이벤트의 유/무료 여부입니다."),
                                 fieldWithPath("eventStatus").description("이벤트의 상태값입니다."),
+                                fieldWithPath("manager").description("해당 이벤트의 생성자입니다."),
                                 //TODO _links 밑에 있는 데이터들은 무시
                                 fieldWithPath("_links.*.*").ignored()
                         )
@@ -331,6 +389,7 @@ public class EventControllerTests extends BaseControllerTest {
         this.mockMvc.perform(put("/api/events/{id}", event.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventDto))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -377,6 +436,7 @@ public class EventControllerTests extends BaseControllerTest {
                                 fieldWithPath("offline").description("수정된 이벤트의 온/오프라인 여부입니다."),
                                 fieldWithPath("free").description("수정된 이벤트의 유/무료 여부입니다."),
                                 fieldWithPath("eventStatus").description("수정된 이벤트의 상태값입니다."),
+                                fieldWithPath("manager").description("해당 이벤트의 생성자입니디."),
                                 //TODO _links 밑에 있는 데이터들은 무시
                                 fieldWithPath("_links.*.*").ignored()
                         )
@@ -395,6 +455,7 @@ public class EventControllerTests extends BaseControllerTest {
         this.mockMvc.perform(put("/api/events/{id}", event.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventDto))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -414,6 +475,7 @@ public class EventControllerTests extends BaseControllerTest {
         this.mockMvc.perform(put("/api/events/{id}", event.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventDto))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -433,6 +495,7 @@ public class EventControllerTests extends BaseControllerTest {
         this.mockMvc.perform(put("/api/events/12312412")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(eventDto))
+                        .header(HttpHeaders.AUTHORIZATION, getBearerToken())
                 )
                 .andDo(print())
                 .andExpect(status().isNotFound())
