@@ -2,7 +2,6 @@ package com.icloud.demoinflearnrestapi.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icloud.demoinflearnrestapi.common.BaseControllerTest;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
